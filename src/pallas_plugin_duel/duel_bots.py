@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 from nonebot import get_bots, logger
 
 from pallas.api.platform import normalize_message_time
-from pallas.api.platform_online_cache import (
+from pallas.api.platform import (
     GROUP_ONLINE_TTL_SEC,
     NS_FLEET,
     NS_LOCAL_CONNECTED,
