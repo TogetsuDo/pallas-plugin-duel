@@ -21,7 +21,7 @@ from pallas_plugin_duel.duel_message import (
     message_has_content,
 )
 from pallas_plugin_duel.duel_session import register_duel_narrative_line
-from src.platform.bot_runtime.send_unavailable import (
+from pallas.api.platform import (
     is_bot_send_unavailable,
     log_bot_send_unavailable,
 )
@@ -282,8 +282,8 @@ async def _route_send_outbound(
     bots = get_bots()
     inst = bots.get(str(qq))
     if inst is None:
-        from src.platform.shard.coord.bot_action import send_group_message_as_bot
-        from src.plugins.block import is_fleet_bot_qq
+        from pallas.api.platform import send_group_message_as_bot
+        from pallas.api.platform import is_fleet_bot_qq
 
         try:
             qq_int = int(qq)

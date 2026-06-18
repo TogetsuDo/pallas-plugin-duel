@@ -11,8 +11,8 @@ from pallas_plugin_duel.duel_bots import (
     list_local_fleet_bots_in_group,
     pick_cage_duel_bot_pair,
 )
-from src.platform.shard import context as shard_ctx
-from src.platform.shard.coord.cage_duel import (
+from pallas.core.platform.shard import context as shard_ctx
+from pallas.core.platform.shard.coord.cage_duel import (
     run_shard_cage_duel_coord,
     update_shard_cage_duel_registration,
 )
@@ -79,7 +79,7 @@ def cage_narrator_offline_for_reply(narrator: int) -> bool:
     """分片下主持牛未在本 worker 连线且集群无在线记录时，应向用户提示离线。"""
     if not shard_ctx.sharding_active():
         return False
-    from src.platform.shard.presence import (
+    from pallas.api.platform import (
         bot_has_local_connection,
         get_cluster_online_bot_ids,
     )

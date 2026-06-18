@@ -50,9 +50,9 @@ from pallas_plugin_duel.duel_terms import (
     TAG_PUBLIC_INTRUSION,
     round_finale_head,
 )
-from src.features.command_limits import get_command_cooldown_sec
-from src.foundation.config import GroupConfig
-from src.platform.multi_bot.group import (
+from pallas.api.limits import get_command_cooldown_sec
+from pallas.api.config import GroupConfig
+from pallas.api.platform import (
     claim_group_message_event,
     try_acquire_group_broadcast_slot,
 )
@@ -161,14 +161,14 @@ async def try_claim_duel_user_reply(
 
 def try_begin_duel_group(group_id: int) -> bool:
     """同群同时进行中的决斗至多一场。"""
-    from src.platform.shard.coord.duel_group import try_begin_duel_group as acquire
+    from pallas.core.platform.shard.coord.duel_group import try_begin_duel_group as acquire
 
     return acquire(group_id)
 
 
 def end_duel_group(group_id: int) -> None:
     """释放群决斗占用。"""
-    from src.platform.shard.coord.duel_group import end_duel_group as release
+    from pallas.core.platform.shard.coord.duel_group import end_duel_group as release
 
     release(group_id)
 
@@ -178,7 +178,7 @@ async def begin_duel_command(
 ) -> DuelCommandGate:
     """群级互斥 + 群级指令 CD。"""
     from pallas_plugin_duel.duel_session import get_duel_pair
-    from src.platform.shard.coord.duel_group import _LOCK
+    from pallas.core.platform.shard.coord.duel_group import _LOCK
 
     gate = await _LOCK.begin(group_id, local_alive=lambda: get_duel_pair(group_id))
     if gate == "busy":

@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING, Any
 
 from nonebot import get_bots, logger
 
-from src.platform.multi_bot.dedup import normalize_message_time
-from src.platform.multi_bot.group_online_cache import (
+from pallas.api.platform import normalize_message_time
+from pallas.api.platform_online_cache import (
     GROUP_ONLINE_TTL_SEC,
     NS_FLEET,
     NS_LOCAL_CONNECTED,
@@ -19,8 +19,8 @@ from src.platform.multi_bot.group_online_cache import (
     resolve_local_connected_bots_in_group,
     store_cached_group_bot_ids,
 )
-from src.platform.shard import context as shard_ctx
-from src.plugins.block import is_fleet_bot_qq
+from pallas.core.platform.shard import context as shard_ctx
+from pallas.api.platform import is_fleet_bot_qq
 
 if TYPE_CHECKING:
     from nonebot.adapters.onebot.v11 import GroupMessageEvent
@@ -134,7 +134,7 @@ async def list_group_online_bot_ids(group_id: int) -> list[int]:
 
 async def resolve_unified_group_online_bot_ids(group_id: int) -> list[int]:
     """单进程多账号：本进程已连接 fleet 牛 ∩ 本群成员。"""
-    from src.platform.multi_bot.fleet import get_catalog_bot_ids
+    from pallas.api.platform import get_catalog_bot_ids
 
     catalog = get_catalog_bot_ids()
     if not catalog:
@@ -169,8 +169,8 @@ async def resolve_unified_group_online_bot_ids(group_id: int) -> list[int]:
 
 async def resolve_shard_group_online_bot_ids(group_id: int) -> list[int]:
     """分片：解析本群可用 fleet 牛。"""
-    from src.platform.multi_bot.fleet import get_catalog_bot_ids
-    from src.platform.shard.presence import (
+    from pallas.api.platform import get_catalog_bot_ids
+    from pallas.api.platform import (
         get_cluster_online_bot_ids,
         pick_local_query_bot,
     )
@@ -306,8 +306,8 @@ async def fleet_bot_confirmed_in_group(bot: Any, group_id: int) -> bool:
 
 async def list_local_fleet_bots_in_group(group_id: int) -> list[int]:
     """本 worker 已连接且能确认在本群的 fleet 牛。"""
-    from src.platform.multi_bot.fleet import get_catalog_bot_ids
-    from src.platform.shard.presence import pick_local_query_bot
+    from pallas.api.platform import get_catalog_bot_ids
+    from pallas.api.platform import pick_local_query_bot
 
     caller = pick_local_query_bot()
     if caller is None:

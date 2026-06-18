@@ -33,14 +33,14 @@ from pallas_plugin_duel.duel_round_engine import (
     try_claim_duel_user_reply,
 )
 from pallas_plugin_duel.duel_session import clear_duel_pair, start_duel_pair
-from src.features.cmd_perm import group_message_permission_for_command
-from src.features.cmd_perm.metadata_defaults import (
+from pallas.api.perm import group_message_permission_for_command
+from pallas.api.metadata import (
     PLUGIN_EXTRA_VERSION,
     PLUGIN_HOMEPAGE,
     PLUGIN_MENU_TEMPLATE,
 )
-from src.features.cmd_perm.metadata_text import SCENE_GROUP, join_usage, usage_line
-from src.platform.ingress.policy_registry import text_matches_plugin_fanout
+from pallas.api.metadata import SCENE_GROUP, join_usage, usage_line
+from pallas.api.platform import text_matches_plugin_fanout
 
 
 @get_driver().on_startup
@@ -61,8 +61,8 @@ async def _register_duel_plugin_coord() -> None:
         is_duel_paired_bot_traffic,
         should_skip_repeater_learn,
     )
-    from src.features.plugin_coord.duel import register_duel_coord
-    from src.platform.multi_bot.group_fleet_probe import register_fleet_probe
+    from pallas.core.plugin_coord.duel import register_duel_coord
+    from pallas.api.platform_fleet_probe import register_fleet_probe
 
     register_duel_coord(
         get_duel_pair=get_duel_pair,
@@ -82,7 +82,7 @@ async def _register_duel_plugin_coord() -> None:
 
 @get_driver().on_startup
 async def _ensure_duel_arknights_resources() -> None:
-    from src.shared.utils.arknights_duel_resource import (
+    from pallas.core.shared.utils.arknights_duel_resource import (
         schedule_arknights_duel_resource_sync,
     )
 
@@ -495,7 +495,7 @@ async def _(bot: Bot, event: GroupMessageEvent, state: T_State) -> None:
             pair,
         )
         return
-    from src.platform.shard.coord.duel_group import try_reclaim_orphan_duel_group
+    from pallas.core.platform.shard.coord.duel_group import try_reclaim_orphan_duel_group
 
     await try_reclaim_orphan_duel_group(event.group_id)
     gate = await begin_duel_command(event.group_id, command_id="duel.cage")

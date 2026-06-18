@@ -15,8 +15,8 @@ from nonebot.rule import Rule
 from pallas_plugin_duel.config import plugin_config
 from pallas_plugin_duel.duel_bots import is_bot_qq
 from pallas_plugin_duel.duel_message import append_duel_message, duel_at, duel_text
-from src.foundation.config import BotConfig, GroupConfig
-from src.shared.utils import is_bot_admin
+from pallas.api.config import BotConfig, GroupConfig
+from pallas.api.utils import is_bot_admin
 
 if TYPE_CHECKING:
     from pallas_plugin_duel.duel_round_engine import DuelStacks
@@ -142,8 +142,8 @@ async def get_active_penalty_async(group_id: int, user_id: int) -> ActivePenalty
 
 
 async def fetch_member_card(bot_id: int, group_id: int, user_id: int) -> str:
-    from src.platform.shard.coord.bot_action import get_member_card_as_bot
-    from src.platform.shard.presence import bot_has_local_connection
+    from pallas.api.platform import get_member_card_as_bot
+    from pallas.api.platform import bot_has_local_connection
 
     if bot_has_local_connection(bot_id):
         bot = get_bots().get(str(bot_id))
@@ -161,8 +161,8 @@ async def fetch_member_card(bot_id: int, group_id: int, user_id: int) -> str:
 
 
 async def set_member_card(bot_id: int, group_id: int, user_id: int, card: str) -> bool:
-    from src.platform.shard.coord.bot_action import set_group_card_as_bot
-    from src.platform.shard.presence import bot_has_local_connection
+    from pallas.api.platform import set_group_card_as_bot
+    from pallas.api.platform import bot_has_local_connection
 
     if bot_has_local_connection(bot_id):
         bot = get_bots().get(str(bot_id))

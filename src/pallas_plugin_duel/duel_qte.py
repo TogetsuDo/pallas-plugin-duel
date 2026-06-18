@@ -36,8 +36,8 @@ from pallas_plugin_duel.duel_terms import (
     QTE_RACE_WIN_TAIL,
     QTE_SUCCESS_TAIL,
 )
-from src.platform.shard import context as shard_ctx
-from src.plugins.block import is_fleet_bot_qq
+from pallas.core.platform.shard import context as shard_ctx
+from pallas.api.platform import is_fleet_bot_qq
 
 if TYPE_CHECKING:
     from pallas_plugin_duel.duel_round_engine import LoadedEvent
@@ -94,7 +94,7 @@ def publish_cluster_qte_greeting_if_changed(
         _published_greeting_snapshot[gid] = snapshot
     else:
         _published_greeting_snapshot.pop(gid, None)
-    from src.platform.shard.coord.duel_qte_redis import (
+    from pallas.core.platform.shard.coord.duel_qte_redis import (
         clear_duel_qte_greeting_redis_sync,
         publish_duel_qte_greeting_redis_sync,
     )
@@ -154,7 +154,7 @@ def duel_qte_blocks_greeting_user(group_id: int, user_id: str | int) -> bool:
         _cluster_qte_users.pop(gid, None)
         _cluster_qte_deadline.pop(gid, None)
     if shard_ctx.sharding_active():
-        from src.platform.shard.coord.duel_qte_redis import (
+        from pallas.core.platform.shard.coord.duel_qte_redis import (
             greeting_user_blocked_redis_sync,
         )
 
@@ -233,7 +233,7 @@ def should_schedule_bot_qte_auto_answer(responder: str) -> bool:
         return False
     if not is_fleet_bot_qq(qq):
         return False
-    from src.platform.shard.presence import bot_has_local_connection
+    from pallas.api.platform import bot_has_local_connection
 
     return bot_has_local_connection(qq)
 
@@ -248,7 +248,7 @@ def should_delegate_bot_qte_to_coord(responder: str) -> bool:
         return False
     if not is_fleet_bot_qq(qq):
         return False
-    from src.platform.shard.presence import bot_has_local_connection
+    from pallas.api.platform import bot_has_local_connection
 
     return not bot_has_local_connection(qq)
 
@@ -287,7 +287,7 @@ def schedule_bot_qte_auto_answer(
 ) -> None:
     """应答方为牛时自动咏名/拆招，按概率成功或嘴瓢失败。"""
     if should_delegate_bot_qte_to_coord(responder):
-        from src.platform.shard.coord.duel_qte import schedule_cross_shard_single_qte
+        from pallas.core.platform.shard.coord.duel_qte import schedule_cross_shard_single_qte
 
         schedule_cross_shard_single_qte(
             group_id,
@@ -344,7 +344,7 @@ def schedule_bot_race_qte_auto_answer(
 ) -> None:
     """双方均为牛时各自自动抢答，先成功者写入 future。"""
     if bot_race_qte_use_cluster_coord(challenger_id, defender_id):
-        from src.platform.shard.coord.duel_qte import (
+        from pallas.core.platform.shard.coord.duel_qte import (
             bridge_race_qte_coord,
             schedule_cross_shard_race_qte,
         )
@@ -366,7 +366,7 @@ def schedule_bot_race_qte_auto_answer(
 
     coord_sid: str | None = None
     if race_qte_needs_coord(challenger_id, defender_id):
-        from src.platform.shard.coord.duel_qte import (
+        from pallas.core.platform.shard.coord.duel_qte import (
             bridge_race_qte_coord,
             schedule_cross_shard_race_qte,
         )
@@ -420,7 +420,7 @@ def schedule_bot_race_qte_auto_answer(
             if not success_roll or outgoing != required_key:
                 return
             if race_coord_sid:
-                from src.platform.shard.coord.duel_qte import (
+                from pallas.core.platform.shard.coord.duel_qte import (
                     try_claim_race_coord_winner,
                 )
 
@@ -1837,7 +1837,7 @@ def clear_all_duel_qte_sessions() -> int:
     _cluster_qte_deadline.clear()
     _published_greeting_snapshot.clear()
     if shard_ctx.sharding_active():
-        from src.platform.shard.coord.duel_qte_redis import (
+        from pallas.core.platform.shard.coord.duel_qte_redis import (
             clear_duel_qte_greeting_redis_sync,
         )
 
