@@ -70,7 +70,9 @@ _cluster_qte_deadline: dict[str, float] = {}
 _published_greeting_snapshot: dict[str, frozenset[str]] = {}
 
 
-def apply_cluster_qte_greeting(gid: str, users: frozenset[str] | None, deadline: float) -> None:
+def apply_cluster_qte_greeting(
+    gid: str, users: frozenset[str] | None, deadline: float
+) -> None:
     """各 worker 通过 Redis pub/sub 同步的 QTE 参与者。"""
     if users:
         _cluster_qte_users[gid] = users
@@ -80,7 +82,9 @@ def apply_cluster_qte_greeting(gid: str, users: frozenset[str] | None, deadline:
     _cluster_qte_deadline.pop(gid, None)
 
 
-def publish_cluster_qte_greeting_if_changed(gid: str, users: frozenset[str], deadline: float) -> None:
+def publish_cluster_qte_greeting_if_changed(
+    gid: str, users: frozenset[str], deadline: float
+) -> None:
     if not shard_ctx.sharding_active():
         return
     snapshot = users or frozenset()
@@ -150,7 +154,9 @@ def duel_qte_blocks_greeting_user(group_id: int, user_id: str | int) -> bool:
         _cluster_qte_users.pop(gid, None)
         _cluster_qte_deadline.pop(gid, None)
     if shard_ctx.sharding_active():
-        from src.platform.shard.coord.duel_qte_redis import greeting_user_blocked_redis_sync
+        from src.platform.shard.coord.duel_qte_redis import (
+            greeting_user_blocked_redis_sync,
+        )
 
         if greeting_user_blocked_redis_sync(gid, uid):
             return True
@@ -161,7 +167,17 @@ def qte_session_id(group_id: int, user_id: str | int) -> tuple[str, str]:
     return str(group_id), str(user_id)
 
 
-_KEYWORD_DECOY = ["格挡", "盾反", "架开", "闪避", "硬扛", "换血", "撤退", "咏唱打断", "不对"]
+_KEYWORD_DECOY = [
+    "格挡",
+    "盾反",
+    "架开",
+    "闪避",
+    "硬扛",
+    "换血",
+    "撤退",
+    "咏唱打断",
+    "不对",
+]
 
 
 def bot_qte_success_rate(qte_kind: str) -> float:
@@ -179,7 +195,9 @@ def pick_wrong_intrusion_name(correct: str) -> str:
         pool = [
             str(o.get("name", "")).strip()
             for o in ops
-            if isinstance(o, dict) and str(o.get("name", "")).strip() and o.get("name") != correct
+            if isinstance(o, dict)
+            and str(o.get("name", "")).strip()
+            and o.get("name") != correct
         ]
     if pool:
         return random.choice(pool)
@@ -194,7 +212,9 @@ def pick_wrong_keyword_reply(correct: str, decoy_keys: list[str] | None) -> str:
     return random.choice(pool) if pool else "……"
 
 
-def pick_bot_wrong_qte_reply(correct: str, qte_kind: str, *, decoy_keys: list[str] | None = None) -> str | None:
+def pick_bot_wrong_qte_reply(
+    correct: str, qte_kind: str, *, decoy_keys: list[str] | None = None
+) -> str | None:
     """失败时可能嘴瓢或沉默。"""
     if random.random() < plugin_config.duel_bot_qte_fail_silent_chance:
         return None
@@ -236,7 +256,9 @@ def should_delegate_bot_qte_to_coord(responder: str) -> bool:
 def race_qte_needs_coord(challenger_id: str, defender_id: str) -> bool:
     if not shard_ctx.sharding_active():
         return False
-    return should_delegate_bot_qte_to_coord(challenger_id) or should_delegate_bot_qte_to_coord(defender_id)
+    return should_delegate_bot_qte_to_coord(
+        challenger_id
+    ) or should_delegate_bot_qte_to_coord(defender_id)
 
 
 def bot_race_qte_use_cluster_coord(challenger_id: str, defender_id: str) -> bool:
@@ -291,7 +313,9 @@ def schedule_bot_qte_auto_answer(
         if fut.done():
             return
         outgoing = (
-            required_key if success_roll else pick_bot_wrong_qte_reply(required_key, qte_kind, decoy_keys=decoy_keys)
+            required_key
+            if success_roll
+            else pick_bot_wrong_qte_reply(required_key, qte_kind, decoy_keys=decoy_keys)
         )
         if outgoing:
             try:
@@ -335,7 +359,9 @@ def schedule_bot_race_qte_auto_answer(
             qte_kind=qte_kind,
             decoy_keys=decoy_keys,
         )
-        asyncio.create_task(bridge_race_qte_coord(coord_sid, fut, window_sec=window_sec))
+        asyncio.create_task(
+            bridge_race_qte_coord(coord_sid, fut, window_sec=window_sec)
+        )
         return
 
     coord_sid: str | None = None
@@ -355,7 +381,9 @@ def schedule_bot_race_qte_auto_answer(
             qte_kind=qte_kind,
             decoy_keys=decoy_keys,
         )
-        asyncio.create_task(bridge_race_qte_coord(coord_sid, fut, window_sec=window_sec))
+        asyncio.create_task(
+            bridge_race_qte_coord(coord_sid, fut, window_sec=window_sec)
+        )
 
     for responder in (challenger_id, defender_id):
         if should_delegate_bot_qte_to_coord(responder):
@@ -363,7 +391,9 @@ def schedule_bot_race_qte_auto_answer(
         if not should_schedule_bot_qte_auto_answer(responder):
             continue
 
-        async def job(responder_id: str = responder, race_coord_sid: str | None = coord_sid) -> None:
+        async def job(
+            responder_id: str = responder, race_coord_sid: str | None = coord_sid
+        ) -> None:
             from nonebot import get_bots
 
             delay = random.uniform(1.0, min(5.5, max(1.8, window_sec - 1.0)))
@@ -376,7 +406,9 @@ def schedule_bot_race_qte_auto_answer(
             outgoing = (
                 required_key
                 if success_roll
-                else pick_bot_wrong_qte_reply(required_key, qte_kind, decoy_keys=decoy_keys)
+                else pick_bot_wrong_qte_reply(
+                    required_key, qte_kind, decoy_keys=decoy_keys
+                )
             )
             if outgoing:
                 try:
@@ -388,7 +420,9 @@ def schedule_bot_race_qte_auto_answer(
             if not success_roll or outgoing != required_key:
                 return
             if race_coord_sid:
-                from src.platform.shard.coord.duel_qte import try_claim_race_coord_winner
+                from src.platform.shard.coord.duel_qte import (
+                    try_claim_race_coord_winner,
+                )
 
                 await try_claim_race_coord_winner(race_coord_sid, responder_id)
             elif not fut.done():
@@ -438,7 +472,9 @@ def build_exchange_auto_qte(qte_actor: str) -> dict[str, Any]:
             "keys": list(_EXCHANGE_RACE_KEYS),
             "window_sec": 10,
             "prompt": EXCHANGE_QTE_RACE_PROMPT,
-            "on_success_effects": [{"type": "deal_damage", "target": "other", "value": 2}],
+            "on_success_effects": [
+                {"type": "deal_damage", "target": "other", "value": 2}
+            ],
             "on_fail_effects": [],
         }
     return {
@@ -518,7 +554,11 @@ def complete_duel_qte(event: GroupMessageEvent) -> None:
     gid = str(event.group_id)
     uid = event.get_user_id()
     race = _race_sessions.get(gid)
-    if race is not None and not race.future.done() and uid in (race.challenger_id, race.defender_id):
+    if (
+        race is not None
+        and not race.future.done()
+        and uid in (race.challenger_id, race.defender_id)
+    ):
         if event.get_plaintext().strip() == race.required_key:
             race.future.set_result(uid)
             sync_active_qte_group(gid)
@@ -531,7 +571,9 @@ def complete_duel_qte(event: GroupMessageEvent) -> None:
     sync_active_qte_group(gid)
 
 
-def resolve_qte_responder_qq(target: str, actor: str, challenger_id: str, defender_id: str) -> str:
+def resolve_qte_responder_qq(
+    target: str, actor: str, challenger_id: str, defender_id: str
+) -> str:
     """把 qte.target 文案解析为实际应答 QQ。"""
     if target in ("actor", "self"):
         return challenger_id if actor == "challenger" else defender_id
@@ -545,7 +587,9 @@ def resolve_qte_responder_qq(target: str, actor: str, challenger_id: str, defend
     return challenger_id if actor == "challenger" else defender_id
 
 
-def select_operator_intrusion_success_effects(spec: dict[str, Any], kind: str) -> list[Any]:
+def select_operator_intrusion_success_effects(
+    spec: dict[str, Any], kind: str
+) -> list[Any]:
     """按 picked_skill_kind 选 on_success_effects_*，缺省依次回退其它表。"""
     key_map = {
         "heal": "on_success_effects_heal",
@@ -620,11 +664,21 @@ def default_intrusion_race_fail_post(skill_kind: str, *, is_pallas: bool) -> str
     return "<O> 似乎极为恼火——<A>与<B> 都没认出她是谁，当场对二人释放「<SK>」：\n<SKD>\n头也不回地走了。"
 
 
-def resolve_intrusion_race_fail_post(spec: dict[str, Any], skill_kind: str, *, is_pallas: bool) -> str:
+def resolve_intrusion_race_fail_post(
+    spec: dict[str, Any], skill_kind: str, *, is_pallas: bool
+) -> str:
     if is_pallas:
-        key = "pallas_after_fail_heal_race" if skill_kind == "heal" else "pallas_after_fail_race"
+        key = (
+            "pallas_after_fail_heal_race"
+            if skill_kind == "heal"
+            else "pallas_after_fail_race"
+        )
     else:
-        key = "after_fail_describe_heal_race" if skill_kind == "heal" else "after_fail_describe_race"
+        key = (
+            "after_fail_describe_heal_race"
+            if skill_kind == "heal"
+            else "after_fail_describe_race"
+        )
     post = str(spec.get(key, "") or "").strip()
     if post:
         return post
@@ -660,7 +714,9 @@ def apply_operator_intrusion_race_fail_outcomes(
     if kind == "heal":
         apply_effect_dicts(stacks, skill_rows, actor)
     else:
-        apply_effect_dicts(stacks, duplicate_intrusion_damage_to_both(skill_rows), actor)
+        apply_effect_dicts(
+            stacks, duplicate_intrusion_damage_to_both(skill_rows), actor
+        )
     apply_effect_dicts(stacks, duplicate_intrusion_damage_to_both(on_fail), actor)
 
 
@@ -709,7 +765,9 @@ async def _run_operator_intrusion_race_qte(
     required_key = intrusion_ctx["name"]
     prompt_extra = str(spec.get("prompt", "")).strip()
     is_pallas = bool(intrusion_ctx.get("is_pallas"))
-    prelude = str(spec.get("pallas_prelude" if is_pallas else "intrusion_prelude", "") or "").strip()
+    prelude = str(
+        spec.get("pallas_prelude" if is_pallas else "intrusion_prelude", "") or ""
+    ).strip()
     if not prelude:
         if is_pallas:
             prelude = "<O>（<P>）落在场心，冷冷看着你们。"
@@ -745,16 +803,24 @@ async def _run_operator_intrusion_race_qte(
             + duel_text(QTE_INTRUSION_RACE_TITLE)
             + duel_at(challenger_id)
             + duel_at(defender_id)
-            + duel_text(f"须在{window_sec}秒内抢先发送闯入者的游戏内干员名{op_hint}（须完全一致，勿夹他词）。")
+            + duel_text(
+                f"须在{window_sec}秒内抢先发送闯入者的游戏内干员名{op_hint}（须完全一致，勿夹他词）。"
+            )
         )
     prelude_block = duel_join_lines(*parts, sep="\n") if parts else Message()
-    body = append_duel_message(prelude_block, prompt, sep="\n") if message_has_content(prelude_block) else prompt
+    body = (
+        append_duel_message(prelude_block, prompt, sep="\n")
+        if message_has_content(prelude_block)
+        else prompt
+    )
     need_avatar = bool(spec.get("show_avatar"))
     avatar_img: bytes | None = None
     if need_avatar:
         from pallas_plugin_duel.arknights_ops import resolve_operator_avatar_image
 
-        avatar_img = await resolve_operator_avatar_image(str(intrusion_ctx.get("op_id", "")))
+        avatar_img = await resolve_operator_avatar_image(
+            str(intrusion_ctx.get("op_id", ""))
+        )
         if not avatar_img:
             logger.error(
                 f"operator_intrusion race missing local avatar op_id={intrusion_ctx.get('op_id')} "
@@ -864,7 +930,12 @@ async def _run_operator_intrusion_race_qte(
             sbonus = spb[sub_id]
             if isinstance(sbonus, list) and sbonus:
                 apply_effect_dicts(stacks, sbonus, winner_actor)
-        post = str(spec.get("pallas_after_success" if is_pallas else "after_success_describe", "") or "").strip()
+        post = str(
+            spec.get(
+                "pallas_after_success" if is_pallas else "after_success_describe", ""
+            )
+            or ""
+        ).strip()
         if not post:
             if is_pallas:
                 post = "<O> 似乎颇为得意，对 <B> 释放「<SK>」：\n<SKD>\n随即离开。"
@@ -874,7 +945,12 @@ async def _run_operator_intrusion_race_qte(
             duel_at(winner_uid) + duel_text(QTE_INTRUSION_RACE_WIN_TAIL),
             format_describe(post, challenger_id, defender_id, intrusion_ctx),
         )
-        if isinstance(pb, dict) and prof in pb and isinstance(pb.get(prof), list) and pb[prof]:
+        if (
+            isinstance(pb, dict)
+            and prof in pb
+            and isinstance(pb.get(prof), list)
+            and pb[prof]
+        ):
             body = append_duel_message(
                 body,
                 format_describe(
@@ -884,10 +960,21 @@ async def _run_operator_intrusion_race_qte(
                     intrusion_ctx,
                 ),
             )
-        if isinstance(spb, dict) and sub_id and sub_id in spb and isinstance(spb.get(sub_id), list) and spb[sub_id]:
+        if (
+            isinstance(spb, dict)
+            and sub_id
+            and sub_id in spb
+            and isinstance(spb.get(sub_id), list)
+            and spb[sub_id]
+        ):
             body = append_duel_message(
                 body,
-                format_describe("\n<O> 离去前又多施了一分力。", challenger_id, defender_id, intrusion_ctx),
+                format_describe(
+                    "\n<O> 离去前又多施了一分力。",
+                    challenger_id,
+                    defender_id,
+                    intrusion_ctx,
+                ),
             )
         await send_duel_line(
             group_id,
@@ -1027,7 +1114,9 @@ async def _run_operator_intrusion_qte(
     prompt_extra = str(spec.get("prompt", "")).strip()
 
     is_pallas = bool(intrusion_ctx.get("is_pallas"))
-    prelude = str(spec.get("pallas_prelude" if is_pallas else "intrusion_prelude", "") or "").strip()
+    prelude = str(
+        spec.get("pallas_prelude" if is_pallas else "intrusion_prelude", "") or ""
+    ).strip()
     if not prelude:
         if is_pallas:
             prelude = "<O>（<P>）落在场心，冷冷看着你们。"
@@ -1065,16 +1154,24 @@ async def _run_operator_intrusion_qte(
             extra
             + duel_text(QTE_INTRUSION_TITLE + "请")
             + duel_at(responder)
-            + duel_text(f"在{window_sec}秒内发送闯入者的「游戏内战显示名」（须完全一致，勿夹他词）。")
+            + duel_text(
+                f"在{window_sec}秒内发送闯入者的「游戏内战显示名」（须完全一致，勿夹他词）。"
+            )
         )
     prelude_block = duel_join_lines(*parts, sep="\n") if parts else Message()
-    body = append_duel_message(prelude_block, prompt, sep="\n") if message_has_content(prelude_block) else prompt
+    body = (
+        append_duel_message(prelude_block, prompt, sep="\n")
+        if message_has_content(prelude_block)
+        else prompt
+    )
     need_avatar = bool(spec.get("show_avatar"))
     avatar_img: bytes | None = None
     if need_avatar:
         from pallas_plugin_duel.arknights_ops import resolve_operator_avatar_image
 
-        avatar_img = await resolve_operator_avatar_image(str(intrusion_ctx.get("op_id", "")))
+        avatar_img = await resolve_operator_avatar_image(
+            str(intrusion_ctx.get("op_id", ""))
+        )
         if not avatar_img:
             logger.error(
                 f"operator_intrusion missing local avatar op_id={intrusion_ctx.get('op_id')} "
@@ -1136,9 +1233,13 @@ async def _run_operator_intrusion_qte(
             narr_log.add(f"第{round_index}幕·{round_tag} 提示未发出")
         return
 
-    _sessions[sid] = _DuelQteSession(future=fut, required_key=required_key, deadline=deadline)
+    _sessions[sid] = _DuelQteSession(
+        future=fut, required_key=required_key, deadline=deadline
+    )
     sync_active_qte_group(sid[0])
-    schedule_bot_qte_auto_answer(group_id, responder, required_key, fut, window_sec, qte_kind="intrusion")
+    schedule_bot_qte_auto_answer(
+        group_id, responder, required_key, fut, window_sec, qte_kind="intrusion"
+    )
     ok = False
     try:
         ok = await asyncio.wait_for(fut, timeout=window_sec + 1.0)
@@ -1168,14 +1269,24 @@ async def _run_operator_intrusion_qte(
             if isinstance(sbonus, list) and sbonus:
                 apply_effect_dicts(stacks, sbonus, actor)
                 applied_effects.extend(sbonus)
-        post = str(spec.get("pallas_after_success" if is_pallas else "after_success_describe", "") or "").strip()
+        post = str(
+            spec.get(
+                "pallas_after_success" if is_pallas else "after_success_describe", ""
+            )
+            or ""
+        ).strip()
         if not post:
             if is_pallas:
                 post = "<O> 似乎颇为得意，对 <B> 释放「<SK>」：\n<SKD>\n随即离开。"
             else:
                 post = "<O> 似乎松了口气，对 <B> 释放「<SK>」：\n<SKD>\n转身离去。"
         body = format_describe(post, challenger_id, defender_id, intrusion_ctx)
-        if isinstance(pb, dict) and prof in pb and isinstance(pb.get(prof), list) and pb[prof]:
+        if (
+            isinstance(pb, dict)
+            and prof in pb
+            and isinstance(pb.get(prof), list)
+            and pb[prof]
+        ):
             body = append_duel_message(
                 body,
                 format_describe(
@@ -1185,10 +1296,21 @@ async def _run_operator_intrusion_qte(
                     intrusion_ctx,
                 ),
             )
-        if isinstance(spb, dict) and sub_id and sub_id in spb and isinstance(spb.get(sub_id), list) and spb[sub_id]:
+        if (
+            isinstance(spb, dict)
+            and sub_id
+            and sub_id in spb
+            and isinstance(spb.get(sub_id), list)
+            and spb[sub_id]
+        ):
             body = append_duel_message(
                 body,
-                format_describe("\n<O> 离去前又多施了一分力。", challenger_id, defender_id, intrusion_ctx),
+                format_describe(
+                    "\n<O> 离去前又多施了一分力。",
+                    challenger_id,
+                    defender_id,
+                    intrusion_ctx,
+                ),
             )
         await send_duel_line(
             group_id,
@@ -1221,15 +1343,21 @@ async def _run_operator_intrusion_qte(
             apply_effect_dicts(stacks, skill_fx, actor)
         apply_effect_dicts(stacks, on_fail, actor)
         if is_pallas:
-            fail_key = "pallas_after_fail_heal" if kind == "heal" else "pallas_after_fail"
+            fail_key = (
+                "pallas_after_fail_heal" if kind == "heal" else "pallas_after_fail"
+            )
         else:
-            fail_key = "after_fail_describe_heal" if kind == "heal" else "after_fail_describe"
+            fail_key = (
+                "after_fail_describe_heal" if kind == "heal" else "after_fail_describe"
+            )
         post = str(spec.get(fail_key, "") or "").strip()
         if not post:
             post = default_intrusion_fail_post(kind, actor, is_pallas=is_pallas)
         tail = duel_at(responder) + duel_text(f" 没能认出{required_key}")
         body = append_combat_delta(
-            append_duel_message(tail, format_describe(post, challenger_id, defender_id, intrusion_ctx)),
+            append_duel_message(
+                tail, format_describe(post, challenger_id, defender_id, intrusion_ctx)
+            ),
             challenger_id,
             defender_id,
             snap,
@@ -1319,7 +1447,9 @@ async def _run_keyword_race_qte(
             + duel_at(defender_id)
             + duel_text(f" {window_sec}秒内抢先发送「{required_key}」——{damage_hint}。")
         )
-        line = append_duel_message(head, prompt) if message_has_content(head) else prompt
+        line = (
+            append_duel_message(head, prompt) if message_has_content(head) else prompt
+        )
         delivered = await send_duel_line_merge_buffer(
             group_id,
             line,
@@ -1336,9 +1466,13 @@ async def _run_keyword_race_qte(
             + duel_text(QTE_RACE_TITLE)
             + duel_at(challenger_id)
             + duel_at(defender_id)
-            + duel_text(f"须在{window_sec}秒内抢先发送「{required_key}」（须完全一致）——{damage_hint}。")
+            + duel_text(
+                f"须在{window_sec}秒内抢先发送「{required_key}」（须完全一致）——{damage_hint}。"
+            )
         )
-        line = append_duel_message(head, prompt) if message_has_content(head) else prompt
+        line = (
+            append_duel_message(head, prompt) if message_has_content(head) else prompt
+        )
         delivered = await send_duel_line(
             group_id,
             line,
@@ -1351,7 +1485,9 @@ async def _run_keyword_race_qte(
             immediate=True,
         )
     if not delivered:
-        logger.warning(f"race qte prompt undelivered group={group_id} event={d_ev.event_id}")
+        logger.warning(
+            f"race qte prompt undelivered group={group_id} event={d_ev.event_id}"
+        )
         snap = snapshot_combat(stacks)
         fail_actor = qte_actor_from_target(spec, actor)
         apply_effect_dicts(stacks, on_fail, fail_actor)
@@ -1373,7 +1509,9 @@ async def _run_keyword_race_qte(
             immediate=not plugin_config.duel_compact_round,
         )
         if narr_log is not None and round_tag:
-            narr_log.add(f"第{round_index}幕·{round_tag} 抢攻提示未发出 {d_ev.event_id}")
+            narr_log.add(
+                f"第{round_index}幕·{round_tag} 抢攻提示未发出 {d_ev.event_id}"
+            )
         return
 
     _race_sessions[gid] = _DuelRaceQteSession(
@@ -1554,7 +1692,9 @@ async def run_event_qte_if_any(
             + duel_at(responder)
             + duel_text(f" {window_sec}秒内发「{required_key}」。")
         )
-        line = append_duel_message(head, prompt) if message_has_content(head) else prompt
+        line = (
+            append_duel_message(head, prompt) if message_has_content(head) else prompt
+        )
         delivered = await send_duel_line_merge_buffer(
             group_id,
             line,
@@ -1572,7 +1712,9 @@ async def run_event_qte_if_any(
             + duel_at(responder)
             + duel_text(f"在{window_sec}秒内发送「{required_key}」完成 QTE")
         )
-        line = append_duel_message(head, prompt) if message_has_content(head) else prompt
+        line = (
+            append_duel_message(head, prompt) if message_has_content(head) else prompt
+        )
         delivered = await send_duel_line(
             group_id,
             line,
@@ -1585,7 +1727,9 @@ async def run_event_qte_if_any(
             immediate=True,
         )
     if not delivered:
-        logger.warning(f"keyword qte prompt undelivered group={group_id} event={d_ev.event_id}")
+        logger.warning(
+            f"keyword qte prompt undelivered group={group_id} event={d_ev.event_id}"
+        )
         snap = snapshot_combat(stacks)
         apply_effect_dicts(stacks, on_fail, actor)
         await send_duel_line(
@@ -1609,7 +1753,9 @@ async def run_event_qte_if_any(
             narr_log.add(f"第{round_index}幕·{round_tag} QTE提示未发出 {d_ev.event_id}")
         return
 
-    _sessions[sid] = _DuelQteSession(future=fut, required_key=required_key, deadline=deadline)
+    _sessions[sid] = _DuelQteSession(
+        future=fut, required_key=required_key, deadline=deadline
+    )
     sync_active_qte_group(sid[0])
     schedule_bot_qte_auto_answer(
         group_id,
@@ -1660,7 +1806,9 @@ async def run_event_qte_if_any(
         immediate=not plugin_config.duel_compact_round,
     )
     if narr_log is not None and round_tag:
-        narr_log.add(f"第{round_index}幕·{round_tag} QTE{'成' if ok else '败'} {d_ev.event_id}")
+        narr_log.add(
+            f"第{round_index}幕·{round_tag} QTE{'成' if ok else '败'} {d_ev.event_id}"
+        )
 
 
 def clear_all_duel_qte_sessions() -> int:
@@ -1689,7 +1837,9 @@ def clear_all_duel_qte_sessions() -> int:
     _cluster_qte_deadline.clear()
     _published_greeting_snapshot.clear()
     if shard_ctx.sharding_active():
-        from src.platform.shard.coord.duel_qte_redis import clear_duel_qte_greeting_redis_sync
+        from src.platform.shard.coord.duel_qte_redis import (
+            clear_duel_qte_greeting_redis_sync,
+        )
 
         for gid in gids:
             clear_duel_qte_greeting_redis_sync(str(gid))

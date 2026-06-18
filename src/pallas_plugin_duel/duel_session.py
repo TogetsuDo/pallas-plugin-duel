@@ -53,13 +53,19 @@ async def get_duel_pair(group_id: int) -> tuple[int, int] | None:
         return None
 
 
-async def is_duel_paired_bot_traffic(group_id: int, sender_id: int, receiver_bot_id: int) -> bool:
+async def is_duel_paired_bot_traffic(
+    group_id: int, sender_id: int, receiver_bot_id: int
+) -> bool:
     """决斗中的两只牛互相发言时不走「其他牛牛拦截」。"""
     pair = await get_duel_pair(group_id)
     if not pair:
         return False
     a, b = pair
-    return sender_id in (a, b) and receiver_bot_id in (a, b) and sender_id != receiver_bot_id
+    return (
+        sender_id in (a, b)
+        and receiver_bot_id in (a, b)
+        and sender_id != receiver_bot_id
+    )
 
 
 async def register_duel_narrative_line(group_id: int, message: Message) -> None:
@@ -78,7 +84,9 @@ async def register_duel_narrative_line(group_id: int, message: Message) -> None:
     await gc._update_in_memory(_IGNORE_KEY, lines)
 
 
-async def should_skip_repeater_learn(group_id: int, user_id: int, raw_message: str) -> bool:
+async def should_skip_repeater_learn(
+    group_id: int, user_id: int, raw_message: str
+) -> bool:
     """决斗台台词与参战牛消息不参与学习。"""
     pair = await get_duel_pair(group_id)
     if pair and user_id in pair:

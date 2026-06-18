@@ -7,7 +7,11 @@ from typing import Any, Literal
 
 from nonebot import get_bots, logger
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
-from nonebot.adapters.onebot.v11.exception import ActionFailed, ApiNotAvailable, NetworkError
+from nonebot.adapters.onebot.v11.exception import (
+    ActionFailed,
+    ApiNotAvailable,
+    NetworkError,
+)
 from nonebot.matcher import Matcher  # noqa: TC002
 
 from pallas_plugin_duel.duel_message import (
@@ -17,7 +21,10 @@ from pallas_plugin_duel.duel_message import (
     message_has_content,
 )
 from pallas_plugin_duel.duel_session import register_duel_narrative_line
-from src.platform.bot_runtime.send_unavailable import is_bot_send_unavailable, log_bot_send_unavailable
+from src.platform.bot_runtime.send_unavailable import (
+    is_bot_send_unavailable,
+    log_bot_send_unavailable,
+)
 
 _SEND_ERRORS = (ActionFailed, NetworkError, ApiNotAvailable, asyncio.CancelledError)
 
@@ -40,7 +47,9 @@ class RoundLineBuffer:
     send_kwargs: dict[str, Any] = field(default_factory=dict)
 
 
-_round_buffer: ContextVar[RoundLineBuffer | None] = ContextVar("_round_buffer", default=None)
+_round_buffer: ContextVar[RoundLineBuffer | None] = ContextVar(
+    "_round_buffer", default=None
+)
 _routing_bot: ContextVar[Any] = ContextVar("_duel_routing_bot", default=None)
 
 
@@ -183,7 +192,11 @@ async def flush_round_line_buffer(suffix: str | Message) -> None:
         return
     body = duel_join_blocks(buf.parts, sep="\n\n")
     if message_has_content(suffix_msg):
-        body = append_duel_message(body, suffix_msg, sep="\n\n") if message_has_content(body) else suffix_msg
+        body = (
+            append_duel_message(body, suffix_msg, sep="\n\n")
+            if message_has_content(body)
+            else suffix_msg
+        )
     await deliver_duel_line(body, **buf.send_kwargs)
     buf.parts.clear()
 
@@ -231,7 +244,9 @@ async def send_duel_line(
     )
 
 
-def build_duel_outbound_message(body: Message, *, image_bytes: bytes | None = None) -> Message:
+def build_duel_outbound_message(
+    body: Message, *, image_bytes: bytes | None = None
+) -> Message:
     """剧目正文与可选头像合并为一条群消息。"""
     msg = body if message_has_content(body) else Message()
     if image_bytes:
@@ -257,7 +272,11 @@ async def _route_send_outbound(
             await matcher.send(outbound)
             return True
         except _SEND_ERRORS as err:
-            log_duel_send_error(err, group_id=group_id, detail=f"duel matcher.send failed group={group_id}: {err}")
+            log_duel_send_error(
+                err,
+                group_id=group_id,
+                detail=f"duel matcher.send failed group={group_id}: {err}",
+            )
             return False
     qq = _speaker_qq(speaker, challenger_id, defender_id)
     bots = get_bots()
@@ -284,13 +303,19 @@ async def _route_send_outbound(
         return True
     except _SEND_ERRORS as err:
         log_duel_send_error(
-            err, group_id=group_id, detail=f"duel send_group_msg failed group={group_id} qq={qq}: {err}"
+            err,
+            group_id=group_id,
+            detail=f"duel send_group_msg failed group={group_id} qq={qq}: {err}",
         )
     try:
         await matcher.send(outbound)
         return True
     except _SEND_ERRORS as err:
-        log_duel_send_error(err, group_id=group_id, detail=f"duel matcher.send fallback failed group={group_id}: {err}")
+        log_duel_send_error(
+            err,
+            group_id=group_id,
+            detail=f"duel matcher.send fallback failed group={group_id}: {err}",
+        )
         return False
 
 
@@ -337,16 +362,22 @@ async def deliver_duel_line(
         text_ok = message_has_content(text_only) and await _route_send_outbound(
             text_only, **{**send_kwargs, "image_bytes": None}
         )
-        img_ok = await _route_send_outbound(img_only, **{**send_kwargs, "image_bytes": image_bytes})
+        img_ok = await _route_send_outbound(
+            img_only, **{**send_kwargs, "image_bytes": image_bytes}
+        )
         if img_ok and (text_ok or not message_has_content(chunk)):
             logger.info(f"duel send split text+image group={group_id}")
             return True
-        logger.warning(f"duel intrusion image not sent group={group_id} text_ok={text_ok} img_ok={img_ok}")
+        logger.warning(
+            f"duel intrusion image not sent group={group_id} text_ok={text_ok} img_ok={img_ok}"
+        )
         return False
     if image_bytes and message_has_content(chunk):
         text_only = build_duel_outbound_message(chunk, image_bytes=None)
         if await _route_send_outbound(text_only, **send_kwargs):
-            logger.info(f"duel send text-only fallback group={group_id} (avatar skipped)")
+            logger.info(
+                f"duel send text-only fallback group={group_id} (avatar skipped)"
+            )
             return True
     if not message_has_content(chunk):
         return False

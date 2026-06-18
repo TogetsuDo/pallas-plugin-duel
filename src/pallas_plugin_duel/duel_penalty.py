@@ -45,7 +45,9 @@ class ActivePenalty:
 _restore_tasks: dict[tuple[int, int], asyncio.Task[None]] = {}
 
 
-def resolve_winner_loser(challenger_id: str, defender_id: str, stacks: DuelStacks) -> tuple[str, str] | None:
+def resolve_winner_loser(
+    challenger_id: str, defender_id: str, stacks: DuelStacks
+) -> tuple[str, str] | None:
     """与终幕胜负一致；平局返回 None。"""
     chp, dhp = stacks.challenger_hp, stacks.defender_hp
     if chp <= 0 and dhp <= 0:
@@ -71,7 +73,9 @@ def _penalty_to_dict(pen: ActivePenalty) -> dict[str, Any]:
     }
 
 
-def _penalty_from_dict(group_id: int, user_id: int, raw: dict[str, Any]) -> ActivePenalty | None:
+def _penalty_from_dict(
+    group_id: int, user_id: int, raw: dict[str, Any]
+) -> ActivePenalty | None:
     try:
         kind = PenaltyKind(str(raw["kind"]))
         return ActivePenalty(
@@ -171,7 +175,9 @@ async def set_member_card(bot_id: int, group_id: int, user_id: int, card: str) -
             )
             return True
         except ActionFailed as err:
-            logger.debug(f"duel penalty set_group_card failed gid={group_id} uid={user_id}: {err}")
+            logger.debug(
+                f"duel penalty set_group_card failed gid={group_id} uid={user_id}: {err}"
+            )
             return False
     return await set_group_card_as_bot(bot_id, group_id, int(user_id), card)
 
@@ -180,7 +186,9 @@ def _penalty_duration_sec() -> float:
     return float(plugin_config.duel_penalty_minutes * 60)
 
 
-async def send_human_penalty_notice(group_id: int, handler_bot_id: int, user_id: int) -> None:
+async def send_human_penalty_notice(
+    group_id: int, handler_bot_id: int, user_id: int
+) -> None:
     """败者惩罚文案仅发一次。"""
     bot = get_bots().get(str(handler_bot_id))
     if bot is None:
@@ -192,7 +200,9 @@ async def send_human_penalty_notice(group_id: int, handler_bot_id: int, user_id:
     try:
         await bot.send_group_msg(group_id=group_id, message=body)
     except ActionFailed as err:
-        logger.debug(f"duel penalty human notice failed gid={group_id} uid={user_id}: {err}")
+        logger.debug(
+            f"duel penalty human notice failed gid={group_id} uid={user_id}: {err}"
+        )
 
 
 async def _restore_one(group_id: int, user_id: int) -> None:
@@ -363,4 +373,6 @@ async def _(bot: Bot, event: GroupMessageEvent) -> None:
     try:
         await inst.send_group_msg(group_id=event.group_id, message=reply)
     except ActionFailed as err:
-        logger.debug(f"duel penalty bot reply failed gid={event.group_id} uid={event.user_id}: {err}")
+        logger.debug(
+            f"duel penalty bot reply failed gid={event.group_id} uid={event.user_id}: {err}"
+        )

@@ -49,7 +49,11 @@ def user_id_from_member_row(row: Any) -> int | None:
     if isinstance(row, dict):
         uid = row.get("user_id") or row.get("uin") or row.get("qq")
     else:
-        uid = getattr(row, "user_id", None) or getattr(row, "uin", None) or getattr(row, "qq", None)
+        uid = (
+            getattr(row, "user_id", None)
+            or getattr(row, "uin", None)
+            or getattr(row, "qq", None)
+        )
     if uid is None:
         return None
     try:
@@ -94,7 +98,9 @@ def parse_group_member_list_user_ids(raw: Any) -> set[int]:
     return set()
 
 
-async def probe_fleet_bots_in_group(caller: Any, group_id: int, catalog: frozenset[int]) -> list[int]:
+async def probe_fleet_bots_in_group(
+    caller: Any, group_id: int, catalog: frozenset[int]
+) -> list[int]:
     """并发 get_group_member_info 确认本群内的 fleet 牛。"""
     sem = asyncio.Semaphore(8)
 
@@ -164,7 +170,10 @@ async def resolve_unified_group_online_bot_ids(group_id: int) -> list[int]:
 async def resolve_shard_group_online_bot_ids(group_id: int) -> list[int]:
     """分片：解析本群可用 fleet 牛。"""
     from src.platform.multi_bot.fleet import get_catalog_bot_ids
-    from src.platform.shard.presence import get_cluster_online_bot_ids, pick_local_query_bot
+    from src.platform.shard.presence import (
+        get_cluster_online_bot_ids,
+        pick_local_query_bot,
+    )
 
     if not shard_ctx.sharding_active():
         return await resolve_unified_group_online_bot_ids(group_id)
@@ -320,7 +329,9 @@ async def list_local_fleet_bots_in_group(group_id: int) -> list[int]:
     out: list[int] = []
     for bid in sorted(scope):
         try:
-            await caller.get_group_member_info(group_id=group_id, user_id=int(bid), no_cache=True)  # type: ignore[union-attr]
+            await caller.get_group_member_info(
+                group_id=group_id, user_id=int(bid), no_cache=True
+            )  # type: ignore[union-attr]
         except Exception:
             continue
         out.append(int(bid))
@@ -368,7 +379,9 @@ def is_bot_qq(qq: str) -> bool:
         return False
 
 
-def duel_narrator_bot_id(challenger_id: str, defender_id: str, *, dual_bot: bool) -> int | None:
+def duel_narrator_bot_id(
+    challenger_id: str, defender_id: str, *, dual_bot: bool
+) -> int | None:
     """应由哪只牛主持发幕；人 vs 人 返回 None，由消息抢占决定。"""
     if dual_bot:
         return min(int(challenger_id), int(defender_id))

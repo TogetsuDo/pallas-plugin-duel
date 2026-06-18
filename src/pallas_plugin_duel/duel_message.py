@@ -24,7 +24,11 @@ def duel_text(text: str) -> MessageSegment:
 def is_duel_message_segment(value: object) -> bool:
     if isinstance(value, MessageSegment):
         return True
-    return not isinstance(value, (str, bytes, Message)) and hasattr(value, "type") and hasattr(value, "data")
+    return (
+        not isinstance(value, (str, bytes, Message))
+        and hasattr(value, "type")
+        and hasattr(value, "data")
+    )
 
 
 def duel_plain(text: str) -> Message:
@@ -88,7 +92,9 @@ def duel_join_spaced(*parts: DuelContent) -> Message:
     return out
 
 
-def append_duel_message(base: DuelContent, extra: DuelContent, sep: str = "\n") -> Message:
+def append_duel_message(
+    base: DuelContent, extra: DuelContent, sep: str = "\n"
+) -> Message:
     base_msg = coerce_duel_message(base)
     extra_msg = coerce_duel_message(extra)
     if not message_has_content(base_msg):
@@ -98,7 +104,9 @@ def append_duel_message(base: DuelContent, extra: DuelContent, sep: str = "\n") 
     return base_msg + MessageSegment.text(sep) + extra_msg
 
 
-def apply_ab_placeholders(template: str, challenger_id: str, defender_id: str) -> Message:
+def apply_ab_placeholders(
+    template: str, challenger_id: str, defender_id: str
+) -> Message:
     if not template:
         return Message()
     from pallas_plugin_duel.duel_labels import duel_label_for

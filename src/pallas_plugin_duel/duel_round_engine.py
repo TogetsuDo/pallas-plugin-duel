@@ -13,7 +13,12 @@ from nonebot.adapters.onebot.v11 import Message
 from nonebot.matcher import Matcher  # noqa: TC002
 
 from pallas_plugin_duel.config import plugin_config
-from pallas_plugin_duel.duel_labels import bind_duel_labels, duel_label_for, reset_duel_labels, resolve_duel_labels
+from pallas_plugin_duel.duel_labels import (
+    bind_duel_labels,
+    duel_label_for,
+    reset_duel_labels,
+    resolve_duel_labels,
+)
 from pallas_plugin_duel.duel_message import (
     append_duel_message,
     apply_ab_placeholders,
@@ -47,7 +52,10 @@ from pallas_plugin_duel.duel_terms import (
 )
 from src.features.command_limits import get_command_cooldown_sec
 from src.foundation.config import GroupConfig
-from src.platform.multi_bot.group import claim_group_message_event, try_acquire_group_broadcast_slot
+from src.platform.multi_bot.group import (
+    claim_group_message_event,
+    try_acquire_group_broadcast_slot,
+)
 
 if TYPE_CHECKING:
     from nonebot.adapters.onebot.v11 import GroupMessageEvent
@@ -84,7 +92,9 @@ class DuelStacks:
         self.challenger_dp = max(0, min(COMBAT_MAX_DP, self.challenger_dp))
         self.defender_dp = max(0, min(COMBAT_MAX_DP, self.defender_dp))
         self.challenger_buff = max(0, min(STACK_CAP_SELF_BUFF, self.challenger_buff))
-        self.challenger_debuff = max(0, min(STACK_CAP_SELF_DEBUFF, self.challenger_debuff))
+        self.challenger_debuff = max(
+            0, min(STACK_CAP_SELF_DEBUFF, self.challenger_debuff)
+        )
         self.defender_buff = max(0, min(STACK_CAP_SELF_BUFF, self.defender_buff))
         self.defender_debuff = max(0, min(STACK_CAP_SELF_DEBUFF, self.defender_debuff))
         self.field = max(0, min(STACK_CAP_FIELD, self.field))
@@ -141,7 +151,9 @@ async def try_claim_duel_message(event: GroupMessageEvent) -> bool:
     )
 
 
-async def try_claim_duel_user_reply(group_id: int, *, ttl_sec: float | None = None) -> bool:
+async def try_claim_duel_user_reply(
+    group_id: int, *, ttl_sec: float | None = None
+) -> bool:
     """多 Bot 同群：短时内仅一只牛发决斗入口类提示，避免复读。"""
     sec = ttl_sec if ttl_sec is not None else DUEL_USER_REPLY_TTL_SEC
     return await try_acquire_group_broadcast_slot("duel", group_id, ttl_sec=sec)
@@ -161,7 +173,9 @@ def end_duel_group(group_id: int) -> None:
     release(group_id)
 
 
-async def begin_duel_command(group_id: int, *, command_id: str = "duel.duel") -> DuelCommandGate:
+async def begin_duel_command(
+    group_id: int, *, command_id: str = "duel.duel"
+) -> DuelCommandGate:
     """群级互斥 + 群级指令 CD。"""
     from pallas_plugin_duel.duel_session import get_duel_pair
     from src.platform.shard.coord.duel_group import _LOCK
@@ -169,7 +183,9 @@ async def begin_duel_command(group_id: int, *, command_id: str = "duel.duel") ->
     gate = await _LOCK.begin(group_id, local_alive=lambda: get_duel_pair(group_id))
     if gate == "busy":
         return "busy"
-    cooldown_sec = get_command_cooldown_sec(command_id, plugin_config.duel_bot_cooldown_sec) or 0
+    cooldown_sec = (
+        get_command_cooldown_sec(command_id, plugin_config.duel_bot_cooldown_sec) or 0
+    )
     if cooldown_sec <= 0:
         return "ok"
     group_cfg = GroupConfig(group_id, cooldown=cooldown_sec)
@@ -258,13 +274,37 @@ def event_needs_ark_context(ev: LoadedEvent) -> bool:
         return True
     if any(
         x in ev.describe
-        for x in ("<O>", "<P>", "<S1>", "<S2>", "<S3>", "<S1D>", "<S2D>", "<S3D>", "<SK>", "<SKD>", "<SKL>")
+        for x in (
+            "<O>",
+            "<P>",
+            "<S1>",
+            "<S2>",
+            "<S3>",
+            "<S1D>",
+            "<S2D>",
+            "<S3D>",
+            "<SK>",
+            "<SKD>",
+            "<SKL>",
+        )
     ):
         return True
     q = ev.qte
     if not q:
         return False
-    ph = ("<O>", "<P>", "<S1>", "<S2>", "<S3>", "<S1D>", "<S2D>", "<S3D>", "<SK>", "<SKD>", "<SKL>")
+    ph = (
+        "<O>",
+        "<P>",
+        "<S1>",
+        "<S2>",
+        "<S3>",
+        "<S1D>",
+        "<S2D>",
+        "<S3D>",
+        "<SK>",
+        "<SKD>",
+        "<SKL>",
+    )
     for k in ("intrusion_prelude", "after_success_describe", "after_fail_describe"):
         t = str(q.get(k, "") or "")
         if any(x in t for x in ph):
@@ -367,7 +407,10 @@ def load_event_pools() -> dict[PoolName, list[LoadedEvent]]:
 
 def reload_event_pools() -> str:
     """热重载事件池与干员表，并清空未决 QTE。"""
-    from pallas_plugin_duel.arknights_ops import get_operators_payload, reload_operators_cache
+    from pallas_plugin_duel.arknights_ops import (
+        get_operators_payload,
+        reload_operators_cache,
+    )
     from pallas_plugin_duel.duel_qte import clear_all_duel_qte_sessions
 
     clear_all_duel_qte_sessions()
@@ -402,7 +445,9 @@ def _resolve_subject(target: str, actor: Actor) -> list[Actor]:
     return []
 
 
-def _effect_value_from_damage(eff: dict[str, Any], dmg1: int | None, dmg2: int | None) -> int:
+def _effect_value_from_damage(
+    eff: dict[str, Any], dmg1: int | None, dmg2: int | None
+) -> int:
     """use_damage 为 true 用 <DMG>，为 damage2 用 <DMG2>。"""
     flag = eff.get("use_damage")
     if not flag:
@@ -421,7 +466,11 @@ def _apply_effect(
 ) -> None:
     """应用单条效果字典。"""
     etype = eff.get("type")
-    value = _effect_value_from_damage(eff, dmg1, dmg2) if eff.get("use_damage") else int(eff.get("value", 0))
+    value = (
+        _effect_value_from_damage(eff, dmg1, dmg2)
+        if eff.get("use_damage")
+        else int(eff.get("value", 0))
+    )
     tgt = str(eff.get("target", "actor"))
 
     if etype == "add_field":
@@ -603,10 +652,15 @@ def format_player_stat_lines(
     return duel_plain(f"{duel_label_for(qq)} {hp_part} {dp_part}")
 
 
-def side_stack_delta_line(qq: str, buff: int, buff0: int, debuff: int, debuff0: int) -> Message:
+def side_stack_delta_line(
+    qq: str, buff: int, buff0: int, debuff: int, debuff0: int
+) -> Message:
     """单方本段战意/蚀势层变动。"""
     tokens: list[str] = []
-    for cur, prev, label in ((buff, buff0, STACK_BUFF), (debuff, debuff0, STACK_DEBUFF)):
+    for cur, prev, label in (
+        (buff, buff0, STACK_BUFF),
+        (debuff, debuff0, STACK_DEBUFF),
+    ):
         t = _delta_token(cur, prev, label)
         if t:
             tokens.append(t)
@@ -860,7 +914,9 @@ def _maybe_pick_ark_ctx(ev: LoadedEvent) -> dict[str, str] | None:
     if ev.event_id == "public_pallas_intrusion":
         op = find_operator_by_name(PALLAS_OPERATOR_NAME)
     else:
-        op = pick_operator_for_intrusion(pallas_chance=plugin_config.duel_intrusion_pallas_roll_chance)
+        op = pick_operator_for_intrusion(
+            pallas_chance=plugin_config.duel_intrusion_pallas_roll_chance
+        )
     if not op:
         return None
     return build_intrusion_ctx(op)
@@ -881,10 +937,15 @@ async def run_exchange_bout(
     defender_is_bot: bool,
 ) -> bool:
     """兵刃交锋：双方共用对击；可附带 QTE。若本段改动了 HP/DP 则返回 True。"""
-    from pallas_plugin_duel.duel_qte import build_exchange_auto_qte, run_event_qte_if_any
+    from pallas_plugin_duel.duel_qte import (
+        build_exchange_auto_qte,
+        run_event_qte_if_any,
+    )
     from pallas_plugin_duel.duel_send import send_duel_line
 
-    ev = _pick_weighted(exchange_pool, qte_mult=plugin_config.duel_qte_event_weight_mult)
+    ev = _pick_weighted(
+        exchange_pool, qte_mult=plugin_config.duel_qte_event_weight_mult
+    )
     if not ev:
         return False
     dmg1, dmg2 = roll_event_damages(ev)
@@ -912,7 +973,11 @@ async def run_exchange_bout(
     narr.add(f"第{round_index}幕·{TAG_EXCHANGE} {ev.event_id}")
     victim = primary_hp_loss_side(snap, stacks)
     run_qte = bool(ev.qte)
-    if not run_qte and victim and random.random() < plugin_config.duel_exchange_qte_chance:
+    if (
+        not run_qte
+        and victim
+        and random.random() < plugin_config.duel_exchange_qte_chance
+    ):
         run_qte = True
     if run_qte:
         qte_ev = ev
@@ -1031,7 +1096,9 @@ async def _play_clash_side(
         await send_duel_line(
             group_id,
             append_combat_delta(
-                format_describe_with_combat(ev.describe, challenger_id, defender_id, stacks, ark),
+                format_describe_with_combat(
+                    ev.describe, challenger_id, defender_id, stacks, ark
+                ),
                 challenger_id,
                 defender_id,
                 snap,
@@ -1083,10 +1150,18 @@ async def play_clash_hero_events(
     from pallas_plugin_duel.duel_qte import run_event_qte_if_any
     from pallas_plugin_duel.duel_send import send_duel_line
 
-    ce = _pick_weighted(pools["challenger"], qte_mult=plugin_config.duel_qte_event_weight_mult)
-    de = _pick_weighted(pools["defender"], qte_mult=plugin_config.duel_qte_event_weight_mult)
+    ce = _pick_weighted(
+        pools["challenger"], qte_mult=plugin_config.duel_qte_event_weight_mult
+    )
+    de = _pick_weighted(
+        pools["defender"], qte_mult=plugin_config.duel_qte_event_weight_mult
+    )
 
-    if not bot_mode and not _is_operator_intrusion(ce) and not _is_operator_intrusion(de):
+    if (
+        not bot_mode
+        and not _is_operator_intrusion(ce)
+        and not _is_operator_intrusion(de)
+    ):
         ark_c: dict[str, str] | None = None
         ark_d: dict[str, str] | None = None
         if skip_describe:
@@ -1106,7 +1181,9 @@ async def play_clash_hero_events(
                 apply_event_effects(stacks, ce, "challenger")
                 chunks.append(
                     append_combat_delta(
-                        format_describe_with_combat(ce.describe, challenger_id, defender_id, stacks, ark_c),
+                        format_describe_with_combat(
+                            ce.describe, challenger_id, defender_id, stacks, ark_c
+                        ),
                         challenger_id,
                         defender_id,
                         snap,
@@ -1122,7 +1199,9 @@ async def play_clash_hero_events(
                 apply_event_effects(stacks, de, "defender")
                 chunks.append(
                     append_combat_delta(
-                        format_describe_with_combat(de.describe, challenger_id, defender_id, stacks, ark_d),
+                        format_describe_with_combat(
+                            de.describe, challenger_id, defender_id, stacks, ark_d
+                        ),
                         challenger_id,
                         defender_id,
                         snap,
@@ -1219,7 +1298,9 @@ async def play_clash_hero_events(
     )
 
 
-async def pause_between_duel_rounds(round_index: int, pause_lo: float, pause_hi: float) -> None:
+async def pause_between_duel_rounds(
+    round_index: int, pause_lo: float, pause_hi: float
+) -> None:
     """幕间停顿；第 1 幕前不等待。"""
     if round_index <= 1:
         return
@@ -1264,7 +1345,9 @@ async def play_duel_rounds(
     labels_token = bind_duel_labels(labels)
 
     stacks = DuelStacks()
-    rounds = total_rounds if total_rounds is not None else plugin_config.duel_total_rounds
+    rounds = (
+        total_rounds if total_rounds is not None else plugin_config.duel_total_rounds
+    )
     plan = run_round_plan(rounds)
     narr = DuelNarrativeLog()
     try:
@@ -1276,7 +1359,9 @@ async def play_duel_rounds(
             + duel_text(" 步入场心，对决开始。")
         )
         if bot_mode:
-            opener = append_duel_message(duel_plain("不需畏惧，我会战胜那个鲁莽的家伙！"), opener)
+            opener = append_duel_message(
+                duel_plain("不需畏惧，我会战胜那个鲁莽的家伙！"), opener
+            )
         await send_duel_line(
             group_id,
             opener,
@@ -1316,7 +1401,9 @@ async def play_duel_rounds(
                     ev = pick_public_round_event(pools["public"])
                     if ev:
                         ark = _maybe_pick_ark_ctx(ev)
-                        is_intrusion = bool(ev.qte and ev.qte.get("type") == "operator_intrusion")
+                        is_intrusion = bool(
+                            ev.qte and ev.qte.get("type") == "operator_intrusion"
+                        )
                         if is_intrusion:
                             await run_event_qte_if_any(
                                 matcher,
@@ -1342,7 +1429,13 @@ async def play_duel_rounds(
                             line = append_combat_delta(
                                 duel_join_lines(
                                     hdr,
-                                    format_describe_with_combat(ev.describe, challenger_id, defender_id, stacks, ark),
+                                    format_describe_with_combat(
+                                        ev.describe,
+                                        challenger_id,
+                                        defender_id,
+                                        stacks,
+                                        ark,
+                                    ),
                                 ),
                                 challenger_id,
                                 defender_id,
@@ -1389,7 +1482,10 @@ async def play_duel_rounds(
                         )
                 else:
                     hdr += ROUND_KIND_CLASH
-                    from pallas_plugin_duel.duel_send import round_buffer_prepend, send_duel_line
+                    from pallas_plugin_duel.duel_send import (
+                        round_buffer_prepend,
+                        send_duel_line,
+                    )
 
                     if plugin_config.duel_compact_round:
                         round_buffer_prepend(hdr)
@@ -1450,7 +1546,13 @@ async def play_duel_rounds(
         await asyncio.sleep(random.uniform(pause_lo, pause_hi))
         await send_duel_line(
             group_id,
-            summarize_winner(challenger_id, defender_id, stacks, total_rounds=rounds, ko=stacks.is_ko()),
+            summarize_winner(
+                challenger_id,
+                defender_id,
+                stacks,
+                total_rounds=rounds,
+                ko=stacks.is_ko(),
+            ),
             matcher=matcher,
             challenger_id=challenger_id,
             defender_id=defender_id,

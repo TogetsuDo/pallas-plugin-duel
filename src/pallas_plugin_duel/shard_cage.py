@@ -79,7 +79,10 @@ def cage_narrator_offline_for_reply(narrator: int) -> bool:
     """分片下主持牛未在本 worker 连线且集群无在线记录时，应向用户提示离线。"""
     if not shard_ctx.sharding_active():
         return False
-    from src.platform.shard.presence import bot_has_local_connection, get_cluster_online_bot_ids
+    from src.platform.shard.presence import (
+        bot_has_local_connection,
+        get_cluster_online_bot_ids,
+    )
 
     if bot_has_local_connection(narrator):
         return False
