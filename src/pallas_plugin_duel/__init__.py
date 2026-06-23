@@ -41,6 +41,7 @@ from pallas.api.metadata import (
 )
 from pallas.api.metadata import SCENE_GROUP, join_usage, usage_line
 from pallas.api.platform import text_matches_plugin_fanout
+from pallas.product.llm.knowledge.declare import knowledge_source_row
 
 
 @get_driver().on_startup
@@ -181,6 +182,40 @@ __plugin_meta__ = PluginMetadata(
                 "brief_des": "热更新泰拉剧情包与干员名单",
                 "detail_des": ("立即重载 default 剧情包与干员表，并取消进行中的抢答。"),
             },
+        ],
+        "knowledge_sources": [
+            knowledge_source_row(
+                source_id="duel.faq",
+                title="牛牛决斗说明",
+                description="泰拉风味多幕决斗玩法",
+                chunks=[
+                    {
+                        "title": "如何发起决斗",
+                        "content": (
+                            "「牛牛决斗 @对手 [N幕|N回合]」与一名对手对决；"
+                            "「牛牛决斗 @牛A @牛B」指定两只牛牛；"
+                            "「八角笼牛 [N幕|N回合]」随机抽两只在线牛牛。"
+                        ),
+                        "keywords": "决斗,牛牛决斗,八角笼,怎么玩,开战",
+                    },
+                    {
+                        "title": "抢答与幕面",
+                        "content": (
+                            "每幕可能出现抢答，在时限内发送正确干员全名或关键词可占优；"
+                            "认错或超时会失利，牛牛也可能自动应答。"
+                        ),
+                        "keywords": "抢答,干员,关键词,幕,回合",
+                    },
+                    {
+                        "title": "事件重载",
+                        "content": (
+                            "群管可发送「决斗事件重载」热更新剧情包与干员表；"
+                            "进行中的抢答会被取消。"
+                        ),
+                        "keywords": "重载,事件,剧情,干员表",
+                    },
+                ],
+            ),
         ],
     },
 )
@@ -495,7 +530,9 @@ async def _(bot: Bot, event: GroupMessageEvent, state: T_State) -> None:
             pair,
         )
         return
-    from pallas.core.platform.shard.coord.duel_group import try_reclaim_orphan_duel_group
+    from pallas.core.platform.shard.coord.duel_group import (
+        try_reclaim_orphan_duel_group,
+    )
 
     await try_reclaim_orphan_duel_group(event.group_id)
     gate = await begin_duel_command(event.group_id, command_id="duel.cage")
