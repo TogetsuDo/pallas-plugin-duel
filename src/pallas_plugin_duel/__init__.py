@@ -120,6 +120,7 @@ __plugin_meta__ = PluginMetadata(
         "command_limits": [
             {"id": "duel.duel", "cd_sec": 5},
             {"id": "duel.cage", "cd_sec": 5},
+            {"id": "duel.reload_events", "cd_sec": 10},
         ],
         "ingress_fanout": {
             "scope": "always",
