@@ -161,7 +161,9 @@ async def try_claim_duel_user_reply(
 
 def try_begin_duel_group(group_id: int) -> bool:
     """同群同时进行中的决斗至多一场。"""
-    from pallas.core.platform.shard.coord.duel_group import try_begin_duel_group as acquire
+    from pallas.core.platform.shard.coord.duel_group import (
+        try_begin_duel_group as acquire,
+    )
 
     return acquire(group_id)
 

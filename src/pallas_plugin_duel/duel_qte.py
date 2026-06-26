@@ -287,7 +287,9 @@ def schedule_bot_qte_auto_answer(
 ) -> None:
     """应答方为牛时自动咏名/拆招，按概率成功或嘴瓢失败。"""
     if should_delegate_bot_qte_to_coord(responder):
-        from pallas.core.platform.shard.coord.duel_qte import schedule_cross_shard_single_qte
+        from pallas.core.platform.shard.coord.duel_qte import (
+            schedule_cross_shard_single_qte,
+        )
 
         schedule_cross_shard_single_qte(
             group_id,
